@@ -31,7 +31,8 @@ export default [
         { allowConstantExport: true },
       ],
       'semi': ['error', 'never'],
-      'prettier/prettier': 'error', 
+      'quotes': ['error', 'double'], // Adiciona esta linha para forçar aspas duplas
+      'prettier/prettier': ['error', { singleQuote: false }], 
     },
   }
 ]
