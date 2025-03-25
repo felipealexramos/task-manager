@@ -1,5 +1,5 @@
-import Tasks from "./components/Tasks"
-import Header from "./components/Header"
+import Tasks from './components/Tasks'
+import Header from './components/Header'
 
 function App() {
   return (
@@ -7,7 +7,7 @@ function App() {
     <Header />
     <Tasks />
   </div>
-  )
+  );
 }
 
-export default App
+export default App;
