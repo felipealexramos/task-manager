@@ -3,7 +3,7 @@ import Sidebar from "./components/Sidebar"
 
 function App() {
   return (
-    <div>
+    <div className="flex gap-9">
       <Sidebar />
       <Tasks />
     </div>
