@@ -1,4 +1,6 @@
 import SidebarButton from "./SidebarButton"
+import HomeIcon from "../assets/icons/home-icon.svg?react"
+import TaskIcon from "../assets/icons/list-icon.svg?react"
 
 const SideBar = () => {
   return (
@@ -12,8 +14,14 @@ const SideBar = () => {
       </div>
 
       <div className="flex flex-col gap-2 p-2">
-        <SidebarButton variant="unselected">Início</SidebarButton>
-        <SidebarButton variant="selected">Minhas Tarefas</SidebarButton>
+        <SidebarButton variant="unselected">
+          <HomeIcon className="text-[#00ADB5]" />
+          Início
+        </SidebarButton>
+        <SidebarButton variant="selected">
+          <TaskIcon />
+          Minhas Tarefas
+        </SidebarButton>
       </div>
     </div>
   )
