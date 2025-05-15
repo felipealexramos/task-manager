@@ -1,0 +1,48 @@
+import CheckIcon from "../assets/icons/check.svg?react"
+import LoadIcon from "../assets/icons/loader.svg?react"
+import DetailsIcon from "../assets/icons/details.svg?react"
+
+const TaskItem = ({ task }) => {
+  const getStatusClasses = () => {
+    switch (task.time) {
+      case "morning":
+        return "bg-[#00ADB5] text-[#00ADB5]"
+      case "afternoon":
+        return "bg-[#FFAA04] text-[#FFAA04]"
+      case "night":
+        return "bg-[#35383E] text-[#35383E]"
+      default:
+        return ""
+    }
+  }
+
+  return (
+    <div
+      className={`flex items-center justify-between gap-2 rounded-lg bg-opacity-10 px-4 py-3 text-sm ${getStatusClasses()}`}
+    >
+      <div className="flex items-center gap-2">
+        <label
+          className={`relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg ${getStatusClasses}`}
+        >
+          <input
+            type="checkbox"
+            className="absolute h-7 w-7 cursor-pointer"
+            checked={task.status === "done"}
+            onChange={() => {}}
+          />
+          {task.status === "done" && <CheckIcon />}
+          {task.status === "in_progress" && (
+            <LoadIcon className="animate-spin" />
+          )}
+        </label>
+        {task.title}
+      </div>
+
+      <a href="#" className="transition hover:opacity-75">
+        <DetailsIcon />
+      </a>
+    </div>
+  )
+}
+
+export default TaskItem
