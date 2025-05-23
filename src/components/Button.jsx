@@ -1,4 +1,4 @@
-const Button = ({ children, variant = "primary", onClick }) => {
+const Button = ({ children, variant = "primary", ...rest }) => {
   const getVariantClasses = () => {
     switch (variant) {
       case "primary":
@@ -11,7 +11,7 @@ const Button = ({ children, variant = "primary", onClick }) => {
   return (
     <button
       className={`flex items-center gap-2 rounded-lg p-2 transition hover:opacity-70 ${getVariantClasses()}`}
-      onClick={onClick}
+      {...rest}
     >
       {children}
     </button>
