@@ -2,7 +2,7 @@ import { createPortal } from "react-dom"
 
 import Button from "./Button"
 import Input from "./Input"
-import InputLabel from "./InputLabel"
+import Select from "./Select"
 
 const AddTaskDialog = ({ isOpen, handleClose }) => {
   if (!isOpen) return null
@@ -19,18 +19,7 @@ const AddTaskDialog = ({ isOpen, handleClose }) => {
             label="Título"
             placeholder="Insira o título da tarefa"
           />
-          <div className="flex flex-col gap-1 text-left">
-            <InputLabel htmlFor="time">Horário</InputLabel>
-
-            <select
-              id="time"
-              className="rounded-lg border border-solid border-[#ECECEC] px-4 py-3 outline-[#00ADB5] placeholder:text-sm"
-            >
-              <option value="morning">Manhã</option>
-              <option value="afternoon">Tarde</option>
-              <option value="evening">Noite</option>
-            </select>
-          </div>
+          <Select />
           <Input
             id="title"
             label="Descrição"
