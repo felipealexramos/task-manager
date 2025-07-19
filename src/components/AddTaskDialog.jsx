@@ -10,16 +10,35 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
   const [time, setTime] = useState("morning")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [errors, setErrors] = useState([])
 
   const handleFormSubmit = () => {
+    const newErrors = []
+
     // Validação básica
     if (!title.trim()) {
-      alert("Por favor, insira um título para a tarefa")
-      return
+      newErrors.push({
+        inputName: "title",
+        message: "Esse campo é obrigatório",
+      })
     }
 
     if (!time) {
-      alert("Por favor, selecione um horário")
+      newErrors.push({
+        inputName: "time",
+        message: "Esse campo é obrigatório",
+      })
+    }
+
+    if (!description.trim()) {
+      newErrors.push({
+        inputName: "description",
+        message: "Esse campo é obrigatório",
+      })
+    }
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors)
       return
     }
 
@@ -32,27 +51,32 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
       status: "not_started",
     }
 
-    // Enviar a tarefa
     handleSubmit(newTask)
 
-    // Limpar o formulário
+    // Limpar o formulário e erros
     setTitle("")
     setDescription("")
     setTime("morning")
+    setErrors([])
 
-    // Fechar o dialog
     handleClose()
   }
 
   const handleCancel = () => {
-    // Limpar o formulário ao cancelar
     setTitle("")
     setDescription("")
     setTime("morning")
+    setErrors([])
     handleClose()
   }
 
   if (!isOpen) return null
+
+  const titleError = errors.find((error) => error.inputName === "title")
+  const timeError = errors.find((error) => error.inputName === "time")
+  const descriptionError = errors.find(
+    (error) => error.inputName === "description"
+  )
 
   return createPortal(
     <div className="fixed bottom-0 left-0 top-0 flex h-screen w-screen items-center justify-center backdrop-blur">
@@ -68,17 +92,21 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
             placeholder="Insira o título da tarefa"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            errorMessage={titleError?.message}
           />
           <Select
             value={time}
             onChange={(event) => setTime(event.target.value)}
+            errorMessage={timeError?.message}
           />
+
           <Input
             id="task-description"
             label="Descrição"
             placeholder="Descrição da tarefa"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            errorMessage={descriptionError?.message}
           />
           <div className="flex gap-3">
             <Button
