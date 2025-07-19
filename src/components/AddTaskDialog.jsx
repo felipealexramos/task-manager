@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { v4 } from "uuid"
 
@@ -8,12 +8,18 @@ import Select from "./Select"
 
 const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
   const [time, setTime] = useState("morning")
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
   const [errors, setErrors] = useState([])
+
+  const titleRef = useRef()
+  const descriptionRef = useRef()
 
   const handleFormSubmit = () => {
     const newErrors = []
+
+    console.log(titleRef.current.value)
+
+    const title = titleRef.current.value
+    const description = descriptionRef.current.value
 
     // Validação básica
     if (!title.trim()) {
@@ -46,17 +52,17 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
     // Criar a tarefa
     const newTask = {
       id: v4(),
-      title: title.trim(),
+      title,
       time,
-      description: description.trim(),
+      description,
       status: "not_started",
     }
 
     handleSubmit(newTask)
 
     // Limpar o formulário e erros
-    setTitle("")
-    setDescription("")
+    if (titleRef.current) titleRef.current.value = ""
+    if (descriptionRef.current) descriptionRef.current.value = ""
     setTime("morning")
     setErrors([])
 
@@ -64,8 +70,8 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
   }
 
   const handleCancel = () => {
-    setTitle("")
-    setDescription("")
+    titleRef.current.value = ""
+    descriptionRef.current.value = ""
     setTime("morning")
     setErrors([])
     handleClose()
@@ -91,9 +97,8 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
             id="task-title"
             label="Título"
             placeholder="Insira o título da tarefa"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
             errorMessage={titleError?.message}
+            ref={titleRef}
           />
           <Select
             value={time}
@@ -105,8 +110,7 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
             id="task-description"
             label="Descrição"
             placeholder="Descrição da tarefa"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            ref={descriptionRef}
             errorMessage={descriptionError?.message}
           />
           <div className="flex gap-3">
