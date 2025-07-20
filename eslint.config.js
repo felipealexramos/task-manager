@@ -37,6 +37,7 @@ export default [
       "prettier/prettier": ["error", { singleQuote: false }],
       "simple-import-sort/imports": "warn",
       "simple-import-sort/exports": "warn",
+      "react/propt-types": "on",
     },
   },
 ]
