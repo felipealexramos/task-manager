@@ -12,7 +12,7 @@ const Input = forwardRef(({ label, errorMessage, ...rest }, ref) => {
         ref={ref}
       />
       {errorMessage && (
-        <p className="text-left text-xs text-red-500">{errorMessage}</p>
+        <p className="text-brand-danger text-left text-xs">{errorMessage}</p>
       )}
     </div>
   )
