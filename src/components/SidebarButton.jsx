@@ -2,9 +2,9 @@ const SideBarButton = ({ children, variant }) => {
   const getVariantClasses = () => {
     switch (variant) {
       case "selected":
-        return "bg-[#00ADB5] text-white"
+        return "bg-brand-primary text-white"
       case "unselected":
-        return "hover:bg-[#00ADB5] hover:text-white"
+        return "hover:bg-brand-primary hover:text-white"
       default:
         return ""
     }

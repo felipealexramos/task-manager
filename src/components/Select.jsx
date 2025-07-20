@@ -7,7 +7,7 @@ const Select = (props) => {
 
       <select
         id="time"
-        className="rounded-lg border border-solid border-[#ECECEC] px-4 py-3 outline-[#00ADB5] placeholder:text-sm"
+        className="outline-brand-primary border-brand-border rounded-lg border border-solid px-4 py-3 placeholder:text-sm"
         {...props}
       >
         <option value="morning">Manhã</option>

@@ -5,11 +5,11 @@ const TaskItem = ({ task, handleCheckBoxClick, handleDeleteClick }) => {
   const getStatusClasses = () => {
     switch (task.status) {
       case "done":
-        return "bg-[#00ADB5] text-[#00ADB5]"
+        return "bg-brand-primary text-brand-primary"
       case "in_progress":
-        return "bg-[#FFAA04] text-[#FFAA04]"
+        return "bg-brand-process text-brand-process"
       case "not_started":
-        return "bg-[#35383E] text-[#35383E]"
+        return "bg-brand-dark-blue text-brand-dark-blue"
       default:
         return ""
     }
@@ -44,7 +44,7 @@ const TaskItem = ({ task, handleCheckBoxClick, handleDeleteClick }) => {
             handleDeleteClick(task.id)
           }}
         >
-          <TrashIcon className="text-[#9A9C9F]" />
+          <TrashIcon className="text-brand-text-grey" />
         </Button>
         <a href="#" className="transition hover:opacity-75">
           <DetailsIcon />

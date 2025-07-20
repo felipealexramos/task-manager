@@ -8,11 +8,11 @@ const Button = ({
   const getVariantClasses = () => {
     switch (variant) {
       case "primary":
-        return "bg-[#00ADB5] text-white"
+        return "bg-brand-primary text-white"
       case "ghost":
-        return "bg-transparent hover:text-[#818181]"
+        return "bg-transparent hover:text-brand-dark-grey"
       case "secondary":
-        return "bg-[#EEEEEE] text-[#35383E]"
+        return "bg-brand-text-grey text-brand-dark-blue"
     }
   }
 
