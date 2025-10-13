@@ -1,4 +1,5 @@
 import InputLabel from "./InputLabel"
+import PropTypes from "prop-types"
 
 const Select = (props) => {
   return (
@@ -19,6 +20,10 @@ const Select = (props) => {
       )}
     </div>
   )
+}
+
+Select.propTypes = {
+  errorMessage: PropTypes.string,
 }
 
 export default Select
