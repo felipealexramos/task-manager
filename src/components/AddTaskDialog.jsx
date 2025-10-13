@@ -6,6 +6,8 @@ import Button from "./Button"
 import Input from "./Input"
 import Select from "./Select"
 
+import PropTypes from "prop-types"
+
 const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
   const [time, setTime] = useState("morning")
   const [errors, setErrors] = useState([])
@@ -133,6 +135,12 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
     </div>,
     document.body
   )
+}
+
+AddTaskDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  handleClose: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
 }
 
 export default AddTaskDialog
