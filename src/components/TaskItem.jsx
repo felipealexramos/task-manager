@@ -1,8 +1,12 @@
+import PropTypes from "prop-types"
+import React, { useState } from "react"
+import { toast } from "react-hot-toast"
+
 import { CheckIcon, DetailsIcon, LoadIcon, TrashIcon } from "../assets/icons"
 import Button from "./Button"
-import PropTypes from "prop-types"
 
-const TaskItem = ({ task, handleCheckBoxClick, handleDeleteClick }) => {
+const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
+  const [deleteTaskIsLoading, setDeleteTaskIsLoading] = useState(false)
   const getStatusClasses = () => {
     switch (task.status) {
       case "done":
@@ -14,6 +18,21 @@ const TaskItem = ({ task, handleCheckBoxClick, handleDeleteClick }) => {
       default:
         return ""
     }
+  }
+
+  const handleDeleteClick = async (taskId) => {
+    setDeleteTaskIsLoading(true)
+    const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      method: "DELETE",
+    })
+    if (!response.ok) {
+      toast.error("Erro ao remover tarefa!")
+      setDeleteTaskIsLoading(false)
+      return
+    }
+    onDeleteSuccess(taskId)
+    toast.success("Tarefa removida com sucesso!")
+    setDeleteTaskIsLoading(false)
   }
 
   return (
@@ -44,8 +63,13 @@ const TaskItem = ({ task, handleCheckBoxClick, handleDeleteClick }) => {
           onClick={() => {
             handleDeleteClick(task.id)
           }}
+          disabled={deleteTaskIsLoading}
         >
-          <TrashIcon className="text-brand-text-grey" />
+          {deleteTaskIsLoading ? (
+            <LoadIcon className="animate-spin" />
+          ) : (
+            <TrashIcon />
+          )}
         </Button>
         <a href="#" className="transition hover:opacity-75">
           <DetailsIcon />
@@ -60,10 +84,10 @@ TaskItem.propTypes = {
     id: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
     status: PropTypes.oneOf(["not_started", "in_progress", "done"]).isRequired,
-    
   }).isRequired,
   handleCheckBoxClick: PropTypes.func.isRequired,
-  handleDeleteClick: PropTypes.func.isRequired,
+  onDeleteSuccess: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool,
 }
 
 export default TaskItem

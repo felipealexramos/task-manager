@@ -1,5 +1,6 @@
 import js from "@eslint/js"
 import prettier from "eslint-plugin-prettier"
+import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import reactRefresh from "eslint-plugin-react-refresh"
 import simpleImportSort from "eslint-plugin-simple-import-sort"
@@ -19,6 +20,7 @@ export default [
       },
     },
     plugins: {
+      react: react,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       prettier: prettier,
@@ -26,6 +28,7 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
+      ...react.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
       "react-refresh/only-export-components": [
@@ -37,7 +40,7 @@ export default [
       "prettier/prettier": ["error", { singleQuote: false }],
       "simple-import-sort/imports": "warn",
       "simple-import-sort/exports": "warn",
-      "react/propt-types": "on",
+      "react/prop-types": "error",
     },
   },
 ]

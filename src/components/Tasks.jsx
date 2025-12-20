@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import {
@@ -19,11 +19,9 @@ const Tasks = () => {
 
   useEffect(() => {
     const fetchedTasks = async () => {
-      const response = await fetch("http://localhost:3000/tasks",
-        {
-          method: "GET",
-        }
-      )
+      const response = await fetch("http://localhost:3000/tasks", {
+        method: "GET",
+      })
       const tasks = await response.json()
       setTasks(tasks)
 
@@ -36,16 +34,7 @@ const Tasks = () => {
   const afternoonTasks = tasks.filter((task) => task.time === "afternoon")
   const nightTasks = tasks.filter((task) => task.time === "night")
 
-  const handleTaskDeleteClick = async(taskId) => {
-    const response = await fetch(`http://localhost:3000/tasks/${taskId}`,
-      {
-        method: "DELETE",
-      }
-    )
-    if (!response.ok) {
-      toast.error("Erro ao remover tarefa!")
-      return
-    }
+  const onDeleteTaskSuccess = async (taskId) => {
     const newTasks = tasks.filter((task) => task.id !== taskId)
     setTasks(newTasks)
     toast.success("Tarefa removida com sucesso!")
@@ -81,16 +70,14 @@ const Tasks = () => {
     setTasks(newTasks)
   }
 
-  const handleAddTaskSubmit = async(task) => {
-    const response = await fetch("http://localhost:3000/tasks",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(task),
-      }
-    )
+  const handleAddTaskSubmit = async (task) => {
+    const response = await fetch("http://localhost:3000/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(task),
+    })
     console.log(response)
     if (!response.ok) {
       toast.error("Erro ao adicionar tarefa!")
@@ -104,7 +91,7 @@ const Tasks = () => {
     <div className="w-full space-y-6 px-8 py-16">
       <div className="flex w-full justify-between">
         <div>
-          <span className="text-brand-primary text-xs font-semibold">
+          <span className="text-xs font-semibold text-brand-primary">
             Minhas Tarefas
           </span>
           <h2 className="text-xl font-semibold">Minhas Tarefas</h2>
@@ -136,7 +123,7 @@ const Tasks = () => {
               key={task.id}
               task={task}
               handleCheckBoxClick={handleTaskCheckBoxClick}
-              handleDeleteClick={handleTaskDeleteClick}
+              onDeleteSuccess={onDeleteTaskSuccess}
             />
           ))}
         </div>
@@ -148,7 +135,7 @@ const Tasks = () => {
               key={task.id}
               task={task}
               handleCheckBoxClick={handleTaskCheckBoxClick}
-              handleDeleteClick={handleTaskDeleteClick}
+              onDeleteSuccess={onDeleteTaskSuccess}
             />
           ))}
         </div>
@@ -160,7 +147,7 @@ const Tasks = () => {
               key={task.id}
               task={task}
               handleCheckBoxClick={handleTaskCheckBoxClick}
-              handleDeleteClick={handleTaskDeleteClick}
+              onDeleteSuccess={onDeleteTaskSuccess}
             />
           ))}
         </div>
