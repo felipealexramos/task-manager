@@ -1,24 +1,25 @@
-import { useRef, useState } from "react"
+import PropTypes from "prop-types"
+import React, { useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { v4 } from "uuid"
+import { toast } from "sonner"
 
+import { LoadIcon } from "../assets/icons"
 import Button from "./Button"
 import Input from "./Input"
 import Select from "./Select"
 
-import PropTypes from "prop-types"
-
-const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
+const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
   const [time, setTime] = useState("morning")
   const [errors, setErrors] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
   const titleRef = useRef()
   const descriptionRef = useRef()
 
-  const handleFormSubmit = () => {
-    const newErrors = []
+  const handleFormSubmit = async () => {
+    if (isLoading) return
 
-    console.log(titleRef.current.value)
+    const newErrors = []
 
     const title = titleRef.current.value
     const description = descriptionRef.current.value
@@ -51,27 +52,45 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
       return
     }
 
-    // Criar a tarefa
-    const newTask = {
-      id: v4(),
-      title,
-      time,
-      description,
-      status: "not_started",
+    setIsLoading(true)
+    try {
+      const response = await fetch("http://localhost:3000/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          time,
+          description,
+          status: "not_started",
+        }),
+      })
+
+      if (!response.ok) {
+        toast.error("Erro ao adicionar tarefa!")
+        return
+      }
+
+      const createdTask = await response.json()
+
+      if (onSubmitSuccess) {
+        onSubmitSuccess(createdTask)
+      }
+
+      if (titleRef.current) titleRef.current.value = ""
+      if (descriptionRef.current) descriptionRef.current.value = ""
+      setTime("morning")
+      setErrors([])
+
+      handleClose()
+    } finally {
+      setIsLoading(false)
     }
-
-    handleSubmit(newTask)
-
-    // Limpar o formulário e erros
-    if (titleRef.current) titleRef.current.value = ""
-    if (descriptionRef.current) descriptionRef.current.value = ""
-    setTime("morning")
-    setErrors([])
-
-    handleClose()
   }
 
   const handleCancel = () => {
+    if (isLoading) return
     titleRef.current.value = ""
     descriptionRef.current.value = ""
     setTime("morning")
@@ -93,7 +112,7 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
         <h2 className="text-xl font-semibold text-brand-dark-blue">
           Nova Tarefa
         </h2>
-        <p className="text-brand-text-gray mb-4 mt-1">
+        <p className="mb-4 mt-1 text-brand-text-gray">
           Insira as informações abaixo:
         </p>
         <div className="flex flex-col space-y-4">
@@ -103,11 +122,13 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
             placeholder="Insira o título da tarefa"
             errorMessage={titleError?.message}
             ref={titleRef}
+            disabled={isLoading}
           />
           <Select
             value={time}
             onChange={(event) => setTime(event.target.value)}
             errorMessage={timeError?.message}
+            disabled={isLoading}
           />
 
           <Input
@@ -116,6 +137,7 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
             placeholder="Descrição da tarefa"
             ref={descriptionRef}
             errorMessage={descriptionError?.message}
+            disabled={isLoading}
           />
           <div className="flex gap-3">
             <Button
@@ -123,10 +145,17 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
               size="large"
               color="secondary"
               onClick={handleCancel}
+              disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button className="w-full" size="large" onClick={handleFormSubmit}>
+            <Button
+              className="w-full"
+              size="large"
+              onClick={handleFormSubmit}
+              disabled={isLoading}
+            >
+              {isLoading && <LoadIcon className="animate-spin" />}
               Salvar
             </Button>
           </div>
@@ -140,7 +169,7 @@ const AddTaskDialog = ({ isOpen, handleClose, handleSubmit }) => {
 AddTaskDialog.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
-  handleSubmit: PropTypes.func.isRequired,
+  onSubmitSuccess: PropTypes.func,
 }
 
 export default AddTaskDialog

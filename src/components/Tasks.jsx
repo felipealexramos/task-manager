@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import {
   AddIcon,
   CloudIcon,
+  LoadIcon,
   MoonIcon,
   SunIcon,
   TrashIcon,
@@ -16,16 +17,20 @@ import TaskSeparator from "./TaskSeparator"
 const Tasks = () => {
   const [tasks, setTasks] = useState([])
   const [addTaskDialogIsOpen, setAddTaskDialogIsOpen] = useState(false)
+  const [tasksIsLoading, setTasksIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchedTasks = async () => {
-      const response = await fetch("http://localhost:3000/tasks", {
-        method: "GET",
-      })
-      const tasks = await response.json()
-      setTasks(tasks)
-
-      console.log(tasks)
+      setTasksIsLoading(true)
+      try {
+        const response = await fetch("http://localhost:3000/tasks", {
+          method: "GET",
+        })
+        const tasks = await response.json()
+        setTasks(tasks)
+      } finally {
+        setTasksIsLoading(false)
+      }
     }
     fetchedTasks()
   }, [])
@@ -70,19 +75,7 @@ const Tasks = () => {
     setTasks(newTasks)
   }
 
-  const handleAddTaskSubmit = async (task) => {
-    const response = await fetch("http://localhost:3000/tasks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(task),
-    })
-    console.log(response)
-    if (!response.ok) {
-      toast.error("Erro ao adicionar tarefa!")
-      return
-    }
+  const handleAddTaskSubmit = (task) => {
     setTasks([...tasks, task])
     toast.success("Tarefa adicionada com sucesso!")
   }
@@ -98,11 +91,14 @@ const Tasks = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button color="ghost">
+          <Button color="ghost" disabled={tasksIsLoading}>
             <TrashIcon />
             Limpar Tarefas
           </Button>
-          <Button onClick={() => setAddTaskDialogIsOpen(true)}>
+          <Button
+            onClick={() => setAddTaskDialogIsOpen(true)}
+            disabled={tasksIsLoading}
+          >
             <AddIcon />
             Nova Tarefa
           </Button>
@@ -110,12 +106,17 @@ const Tasks = () => {
           <AddTaskDialog
             isOpen={addTaskDialogIsOpen}
             handleClose={handleDialogClose}
-            handleSubmit={handleAddTaskSubmit}
+            onSubmitSuccess={handleAddTaskSubmit}
           />
         </div>
       </div>
 
       <div className="rounded-xl bg-white p-6">
+        {tasksIsLoading && (
+          <div className="flex items-center justify-center py-10 text-brand-text-gray">
+            <LoadIcon className="animate-spin" />
+          </div>
+        )}
         <div className="space-y-3">
           <TaskSeparator title="Manhã" icon={<SunIcon />} />
           {morningTasks.map((task) => (

@@ -21,18 +21,21 @@ const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
   }
 
   const handleDeleteClick = async (taskId) => {
+    if (deleteTaskIsLoading) return
     setDeleteTaskIsLoading(true)
-    const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
-      method: "DELETE",
-    })
-    if (!response.ok) {
-      toast.error("Erro ao remover tarefa!")
+    try {
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        toast.error("Erro ao remover tarefa!")
+        return
+      }
+      onDeleteSuccess(taskId)
+      toast.success("Tarefa removida com sucesso!")
+    } finally {
       setDeleteTaskIsLoading(false)
-      return
     }
-    onDeleteSuccess(taskId)
-    toast.success("Tarefa removida com sucesso!")
-    setDeleteTaskIsLoading(false)
   }
 
   return (
@@ -45,8 +48,9 @@ const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
         >
           <input
             type="checkbox"
-            className="absolute h-7 w-7 cursor-pointer"
+            className="absolute h-7 w-7 cursor-pointer disabled:cursor-not-allowed"
             checked={task.status === "done"}
+            disabled={deleteTaskIsLoading}
             onChange={() => handleCheckBoxClick(task.id)}
           />
           {task.status === "done" && <CheckIcon />}
