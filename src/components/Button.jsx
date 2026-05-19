@@ -1,5 +1,5 @@
-import { tv } from "tailwind-variants"
 import PropTypes from "prop-types"
+import { tv } from "tailwind-variants"
 
 const Button = ({
   children,
@@ -15,6 +15,7 @@ const Button = ({
         primary: "bg-brand-primary text-white",
         ghost: "bg-transparent hover:text-brand-dark-grey",
         secondary: "bg-brand-text-grey text-brand-dark-blue",
+        danger: "bg-brand-danger text-white",
       },
       size: {
         small: "py-1 text-xs",
