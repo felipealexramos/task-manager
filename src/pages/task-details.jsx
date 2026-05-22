@@ -109,6 +109,35 @@ const TaskDetailsPage = () => {
     }
   }
 
+  const handleDeleteClick = async () => {
+    if (isLoading) return
+
+    const confirmDelete = window.confirm(
+      "Tem certeza que deseja deletar essa tarefa?"
+    )
+
+    if (!confirmDelete) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        toast.error("Erro ao deletar tarefa!")
+        return
+      }
+
+      toast.success("Tarefa deletada com sucesso!")
+      handleClose()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleClose = () => {
     navigate("/")
   }
@@ -144,7 +173,11 @@ const TaskDetailsPage = () => {
           </div>
 
           {/* parte da direita */}
-          <Button className="h-fit self-end" color="danger">
+          <Button
+            className="h-fit self-end"
+            color="danger"
+            onClick={handleDeleteClick}
+          >
             <TrashIcon />
             Deletar tarefa
           </Button>
