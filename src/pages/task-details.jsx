@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -17,11 +18,12 @@ const TaskDetailsPage = () => {
   const { id: taskId } = useParams()
   const [task, setTask] = useState(null)
   const navigate = useNavigate()
-  const titleRef = useRef()
-  const descriptionRef = useRef()
-  const [time, setTime] = useState("morning")
-  const [errors, setErrors] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  const {
+    register,
+    formState: { errors, isSubmitting },
+    handleSubmit,
+    reset,
+  } = useForm()
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -31,51 +33,15 @@ const TaskDetailsPage = () => {
         })
         const data = await response.json()
         setTask(data)
-        setTime(data.time)
+        reset(data)
       } catch (error) {
         console.error("Erro ao buscar tarefa:", error)
       }
     }
     fetchTask()
-  }, [taskId])
+  }, [taskId, reset])
 
-  const handleFormSubmit = async () => {
-    if (isLoading) return
-
-    const newErrors = []
-
-    const title = titleRef.current.value
-    const description = descriptionRef.current.value
-
-    // Validação básica
-    if (!title.trim()) {
-      newErrors.push({
-        inputName: "title",
-        message: "Esse campo é obrigatório",
-      })
-    }
-
-    if (!time) {
-      newErrors.push({
-        inputName: "time",
-        message: "Esse campo é obrigatório",
-      })
-    }
-
-    if (!description.trim()) {
-      newErrors.push({
-        inputName: "description",
-        message: "Esse campo é obrigatório",
-      })
-    }
-
-    setErrors(newErrors)
-
-    if (newErrors.length > 0) {
-      return
-    }
-
-    setIsLoading(true)
+  const handleFormSubmit = async (data) => {
     try {
       const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
         method: "PATCH",
@@ -83,10 +49,9 @@ const TaskDetailsPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title,
-          time,
-          description,
-          status: "not_started",
+          title: data.title.trim(),
+          description: data.description.trim(),
+          time: data.time,
         }),
       })
 
@@ -97,21 +62,15 @@ const TaskDetailsPage = () => {
 
       await response.json()
 
-      if (titleRef.current) titleRef.current.value = ""
-      if (descriptionRef.current) descriptionRef.current.value = ""
-      setTime("morning")
-      setErrors([])
-
       toast.success("Tarefa atualizada com sucesso!")
       handleClose()
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      console.error("Erro ao atualizar tarefa:", error)
+      toast.error("Erro ao atualizar tarefa!")
     }
   }
 
   const handleDeleteClick = async () => {
-    if (isLoading) return
-
     const confirmDelete = window.confirm(
       "Tem certeza que deseja deletar essa tarefa?"
     )
@@ -120,7 +79,6 @@ const TaskDetailsPage = () => {
       return
     }
 
-    setIsLoading(true)
     try {
       const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
         method: "DELETE",
@@ -133,20 +91,15 @@ const TaskDetailsPage = () => {
 
       toast.success("Tarefa deletada com sucesso!")
       handleClose()
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      console.error("Erro ao deletar tarefa:", error)
+      toast.error("Erro ao deletar tarefa!")
     }
   }
 
   const handleClose = () => {
     navigate("/")
   }
-
-  const titleError = errors.find((error) => error.inputName === "title")
-  const timeError = errors.find((error) => error.inputName === "time")
-  const descriptionError = errors.find(
-    (error) => error.inputName === "description"
-  )
 
   return (
     <div className="flex">
@@ -156,7 +109,10 @@ const TaskDetailsPage = () => {
         <div className="flex w-full justify-between">
           {/* parte da esquerda */}
           <div>
-            <button className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary">
+            <button
+              className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary"
+              onClick={handleClose}
+            >
               <ArrowLeftIcon />
             </button>
             <div className="flex items-center gap-1 text-xs">
@@ -184,48 +140,71 @@ const TaskDetailsPage = () => {
         </div>
 
         {/* dados da tarefa */}
-        <div className="space-y-6 rounded-xl bg-brand-white p-6">
-          <div>
-            <Input
-              id="title"
-              label="Título"
-              defaultValue={task?.title}
-              error={titleError?.message}
-              ref={titleRef}
-            />
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
+          <div className="space-y-6 rounded-xl bg-brand-white p-6">
+            <div>
+              <Input
+                id="title"
+                label="Título"
+                defaultValue={task?.title}
+                {...register("title", {
+                  required: "O título é obrigatório",
+                  validate: (value) => {
+                    if (value.trim() === "") {
+                      return "O título não pode ser vazio"
+                    }
+                    return true
+                  },
+                })}
+                errorMessage={errors.title?.message}
+              />
+            </div>
+            <div>
+              <Select
+                value={task?.time || ""}
+                onChange={(e) => {
+                  const selectedTime = e.target.value
+                  setTask((prevTask) => ({
+                    ...prevTask,
+                    time: selectedTime,
+                  }))
+                }}
+                {...register("time", {
+                  required: "O período é obrigatório",
+                })}
+                errorMessage={errors.time?.message}
+              />
+            </div>
+            <div>
+              <Input
+                id="description"
+                label="Descrição"
+                defaultValue={task?.description}
+                {...register("description", {
+                  required: "A descrição é obrigatória",
+                  validate: (value) => {
+                    if (value.trim() === "") {
+                      return "A descrição não pode ser vazia"
+                    }
+                    return true
+                  },
+                })}
+                errorMessage={errors.description?.message}
+              />
+            </div>
           </div>
-
-          <div>
-            <Select
-              value={time}
-              onChange={(event) => setTime(event.target.value)}
-              error={timeError?.message}
-            />
+          {/* botão de salvar */}
+          <div className="flex w-full justify-end gap-3">
+            <Button
+              size="large"
+              color="primary"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Salvando..." : "Salvar"}
+            </Button>
           </div>
-
-          <div>
-            <Input
-              id="description"
-              label="Descrição"
-              defaultValue={task?.description}
-              error={descriptionError?.message}
-              ref={descriptionRef}
-            />
-          </div>
-        </div>
-
-        {/* botão de salvar */}
-        <div className="flex w-full justify-end gap-3">
-          <Button
-            size="large"
-            color="primary"
-            onClick={handleFormSubmit}
-            disabled={isLoading}
-          >
-            {isLoading && <LoadIcon className="animate-spin" />}
-            Salvar
-          </Button>
-        </div>
+        </form>
       </div>
     </div>
   )
