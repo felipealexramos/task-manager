@@ -50,8 +50,6 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
         onSubmitSuccess(createdTask)
       }
 
-      setTime("morning")
-
       handleClose()
     } finally {
       reset()
@@ -59,8 +57,8 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
   }
 
   const handleCancel = () => {
-    setTime("morning")
     handleClose()
+    reset()
   }
 
   if (!isOpen) return null
