@@ -1,13 +1,25 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import PropTypes from "prop-types"
-import React, { useState } from "react"
-import { toast } from "react-hot-toast"
+import React from "react"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
 
 import { CheckIcon, DetailsIcon, LoadIcon, TrashIcon } from "../assets/icons"
 import Button from "./Button"
 
-const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
-  const [deleteTaskIsLoading, setDeleteTaskIsLoading] = useState(false)
+const TaskItem = ({ task, handleCheckBoxClick }) => {
+  const queryClient = useQueryClient()
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["deleteTask", task.id],
+    mutationFn: async () => {
+      const response = await fetch(`http://localhost:3000/tasks/${task.id}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) {
+        throw new Error("Falha ao remover tarefa")
+      }
+    },
+  })
   const getStatusClasses = () => {
     switch (task.status) {
       case "done":
@@ -22,21 +34,17 @@ const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
   }
 
   const handleDeleteClick = async (taskId) => {
-    if (deleteTaskIsLoading) return
-    setDeleteTaskIsLoading(true)
-    try {
-      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
-        method: "DELETE",
-      })
-      if (!response.ok) {
-        toast.error("Erro ao remover tarefa!")
-        return
-      }
-      onDeleteSuccess(taskId)
-      toast.success("Tarefa removida com sucesso!")
-    } finally {
-      setDeleteTaskIsLoading(false)
-    }
+    mutate(taskId, {
+      onSuccess: () => {
+        queryClient.setQueryData(["tasks"], (oldTasks) =>
+          (oldTasks ?? []).filter((task) => task.id !== taskId)
+        )
+        toast.success("Tarefa removida com sucesso!")
+      },
+      onError: () => {
+        toast.error("Erro ao remover tarefa. Tente novamente.")
+      },
+    })
   }
 
   return (
@@ -51,7 +59,7 @@ const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
             type="checkbox"
             className="absolute h-7 w-7 cursor-pointer disabled:cursor-not-allowed"
             checked={task.status === "done"}
-            disabled={deleteTaskIsLoading}
+            disabled={isPending}
             onChange={() => handleCheckBoxClick(task.id)}
           />
           {task.status === "done" && <CheckIcon />}
@@ -68,13 +76,9 @@ const TaskItem = ({ task, handleCheckBoxClick, onDeleteSuccess }) => {
           onClick={() => {
             handleDeleteClick(task.id)
           }}
-          disabled={deleteTaskIsLoading}
+          disabled={isPending}
         >
-          {deleteTaskIsLoading ? (
-            <LoadIcon className="animate-spin" />
-          ) : (
-            <TrashIcon />
-          )}
+          {isPending ? <LoadIcon className="animate-spin" /> : <TrashIcon />}
         </Button>
         <Link to={`/task/${task.id}`} className="transition hover:opacity-75">
           <DetailsIcon />

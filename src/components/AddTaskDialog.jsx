@@ -1,5 +1,6 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import PropTypes from "prop-types"
-import React, { useState } from "react"
+import React from "react"
 import { createPortal } from "react-dom"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -9,23 +10,11 @@ import Button from "./Button"
 import Input from "./Input"
 import Select from "./Select"
 
-const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
-  const [time, setTime] = useState("morning")
-  const {
-    register,
-    formState: { errors, isSubmitting },
-    handleSubmit,
-    reset,
-  } = useForm({
-    defaultValues: {
-      title: "",
-      time: "morning",
-      description: "",
-    },
-  })
-
-  const handleFormSubmit = async (data) => {
-    try {
+const AddTaskDialog = ({ isOpen, handleClose }) => {
+  const queryClient = useQueryClient()
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["addTask"],
+    mutationFn: async (data) => {
       const response = await fetch("http://localhost:3000/tasks", {
         method: "POST",
         headers: {
@@ -40,20 +29,40 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
       })
 
       if (!response.ok) {
-        toast.error("Erro ao adicionar tarefa!")
-        return
+        throw new Error("Falha ao adicionar tarefa")
       }
 
-      const createdTask = await response.json()
+      return await response.json()
+    },
+  })
+  const {
+    register,
+    formState: { errors, isSubmitting },
+    handleSubmit,
+    reset,
+  } = useForm({
+    defaultValues: {
+      title: "",
+      time: "morning",
+      description: "",
+    },
+  })
 
-      if (onSubmitSuccess) {
-        onSubmitSuccess(createdTask)
-      }
-
-      handleClose()
-    } finally {
-      reset()
-    }
+  const handleFormSubmit = async (data) => {
+    mutate(data, {
+      onSuccess: (newTask) => {
+        queryClient.setQueryData(["tasks"], (oldTasks) => [
+          ...(oldTasks ?? []),
+          newTask,
+        ])
+        toast.success("Tarefa adicionada com sucesso!")
+        handleClose()
+        reset()
+      },
+      onError: () => {
+        toast.error("Erro ao adicionar tarefa. Tente novamente.")
+      },
+    })
   }
 
   const handleCancel = () => {
@@ -81,7 +90,7 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
             label="Título"
             placeholder="Insira o título da tarefa"
             errorMessage={errors.title?.message}
-            disabled={isSubmitting}
+            disabled={isPending}
             {...register("title", {
               required: "O título é obrigatório",
               validate: (value) => {
@@ -93,11 +102,9 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
             })}
           />
           <Select
-            value={time}
-            onChange={(event) => setTime(event.target.value)}
             {...register("time", { required: "O período é obrigatório" })}
             errorMessage={errors.time?.message}
-            disabled={isSubmitting}
+            disabled={isPending}
           />
 
           <Input
@@ -123,7 +130,7 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
               type="button"
               color="secondary"
               onClick={handleCancel}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancelar
             </Button>
@@ -131,9 +138,9 @@ const AddTaskDialog = ({ isOpen, handleClose, onSubmitSuccess }) => {
               className="w-full"
               size="large"
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
             >
-              {isSubmitting && <LoadIcon className="animate-spin" />}
+              {isPending && <LoadIcon className="animate-spin" />}
               Salvar
             </Button>
           </div>

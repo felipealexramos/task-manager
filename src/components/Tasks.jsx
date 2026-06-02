@@ -33,13 +33,6 @@ const Tasks = () => {
   const afternoonTasks = tasks?.filter((task) => task.time === "afternoon")
   const nightTasks = tasks?.filter((task) => task.time === "night")
 
-  const onDeleteTaskSuccess = async (taskId) => {
-    queryClient.setQueryData(["tasks"], (oldTasks) =>
-      (oldTasks ?? []).filter((task) => task.id !== taskId)
-    )
-    toast.success("Tarefa removida com sucesso!")
-  }
-
   const handleDialogClose = async () => {
     setAddTaskDialogIsOpen(false)
   }
@@ -70,14 +63,6 @@ const Tasks = () => {
     queryClient.setQueryData(["tasks"], newTasks)
   }
 
-  const handleAddTaskSubmit = async (task) => {
-    queryClient.setQueryData(["tasks"], (oldTasks) => [
-      ...(oldTasks ?? []),
-      task,
-    ])
-    toast.success("Tarefa adicionada com sucesso!")
-  }
-
   return (
     <div className="w-full space-y-6 px-8 py-16">
       <div className="flex w-full justify-between">
@@ -101,7 +86,6 @@ const Tasks = () => {
           <AddTaskDialog
             isOpen={addTaskDialogIsOpen}
             handleClose={handleDialogClose}
-            onSubmitSuccess={handleAddTaskSubmit}
           />
         </div>
       </div>
@@ -119,7 +103,6 @@ const Tasks = () => {
               key={task.id}
               task={task}
               handleCheckBoxClick={handleTaskCheckBoxClick}
-              onDeleteSuccess={onDeleteTaskSuccess}
             />
           ))}
         </div>
@@ -136,7 +119,6 @@ const Tasks = () => {
               key={task.id}
               task={task}
               handleCheckBoxClick={handleTaskCheckBoxClick}
-              onDeleteSuccess={onDeleteTaskSuccess}
             />
           ))}
         </div>
@@ -153,7 +135,6 @@ const Tasks = () => {
               key={task.id}
               task={task}
               handleCheckBoxClick={handleTaskCheckBoxClick}
-              onDeleteSuccess={onDeleteTaskSuccess}
             />
           ))}
         </div>
