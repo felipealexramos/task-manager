@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import React, { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
@@ -16,102 +17,112 @@ import SideBar from "../components/Sidebar"
 
 const TaskDetailsPage = () => {
   const { id: taskId } = useParams()
-  const [task, setTask] = useState(null)
   const navigate = useNavigate()
-  const {
-    register,
-    formState: { errors, isSubmitting },
-    handleSubmit,
-    reset,
-  } = useForm()
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
-          method: "GET",
-        })
-        const data = await response.json()
-        setTask(data)
-        reset(data)
-      } catch (error) {
-        console.error("Erro ao buscar tarefa:", error)
+  const { data: task } = useQuery({
+    queryKey: ["task", taskId],
+    queryFn: async () => {
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`)
+      if (!response.ok) {
+        throw new Error("Tarefa não encontrada")
       }
-    }
-    fetchTask()
-  }, [taskId, reset])
+      return response.json()
+    },
+  })
 
-  const handleFormSubmit = async (data) => {
-    try {
+  const { mutate: updateTask, isPending: isUpdating } = useMutation({
+    mutationFn: async (data) => {
       const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: data.title.trim(),
           description: data.description.trim(),
           time: data.time,
         }),
       })
-
       if (!response.ok) {
-        toast.error("Erro ao atualizar tarefa!")
-        return
+        throw new Error("Falha ao atualizar tarefa")
       }
-
-      await response.json()
-
+      return response.json()
+    },
+    onSuccess: (updatedTask) => {
+      queryClient.setQueryData(["task", taskId], updatedTask)
+      queryClient.setQueryData(["tasks"], (oldTasks) =>
+        oldTasks?.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+      )
       toast.success("Tarefa atualizada com sucesso!")
-      handleClose()
-    } catch (error) {
-      console.error("Erro ao atualizar tarefa:", error)
-      toast.error("Erro ao atualizar tarefa!")
-    }
-  }
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar tarefa. Tente novamente.")
+    },
+  })
 
-  const handleDeleteClick = async () => {
-    const confirmDelete = window.confirm(
-      "Tem certeza que deseja deletar essa tarefa?"
-    )
-
-    if (!confirmDelete) {
-      return
-    }
-
-    try {
+  const { mutate: deleteTask, isPending: isDeleting } = useMutation({
+    mutationFn: async () => {
       const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
         method: "DELETE",
       })
-
       if (!response.ok) {
-        toast.error("Erro ao deletar tarefa!")
-        return
+        throw new Error("Falha ao deletar tarefa")
       }
-
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["tasks"], (oldTasks) =>
+        oldTasks?.filter((t) => t.id !== taskId)
+      )
       toast.success("Tarefa deletada com sucesso!")
-      handleClose()
-    } catch (error) {
-      console.error("Erro ao deletar tarefa:", error)
-      toast.error("Erro ao deletar tarefa!")
+      navigate("/")
+    },
+    onError: () => {
+      toast.error("Erro ao deletar tarefa. Tente novamente.")
+    },
+  })
+
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+    reset,
+  } = useForm({
+    defaultValues: {
+      title: "",
+      time: "morning",
+      description: "",
+    },
+  })
+
+  useEffect(() => {
+    if (task) {
+      reset(task)
+    }
+  }, [task, reset])
+
+  const handleFormSubmit = (data) => {
+    updateTask(data)
+  }
+
+  const handleDeleteClick = () => {
+    const confirmDelete = window.confirm(
+      "Tem certeza que deseja deletar essa tarefa?"
+    )
+    if (confirmDelete) {
+      deleteTask()
     }
   }
 
-  const handleClose = () => {
-    navigate("/")
-  }
+  const isPending = isUpdating || isDeleting
 
   return (
     <div className="flex">
       <SideBar />
       <div className="w-full space-y-6 px-8 py-16">
-        {/* barra do topo */}
         <div className="flex w-full justify-between">
-          {/* parte da esquerda */}
           <div>
             <button
               className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary"
-              onClick={handleClose}
+              onClick={() => navigate("/")}
             >
               <ArrowLeftIcon />
             </button>
@@ -124,84 +135,66 @@ const TaskDetailsPage = () => {
                 {task?.title}
               </span>
             </div>
-
             <h1 className="mt-2 text-xl font-semibold">{task?.title}</h1>
           </div>
 
-          {/* parte da direita */}
           <Button
             className="h-fit self-end"
             color="danger"
             onClick={handleDeleteClick}
+            disabled={isPending}
           >
+            {isDeleting && <LoadIcon className="animate-spin" />}
             <TrashIcon />
             Deletar tarefa
           </Button>
         </div>
 
-        {/* dados da tarefa */}
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <div className="space-y-6 rounded-xl bg-brand-white p-6">
             <div>
               <Input
                 id="title"
                 label="Título"
-                defaultValue={task?.title}
+                disabled={isPending}
+                errorMessage={errors.title?.message}
                 {...register("title", {
                   required: "O título é obrigatório",
-                  validate: (value) => {
-                    if (value.trim() === "") {
-                      return "O título não pode ser vazio"
-                    }
-                    return true
-                  },
+                  validate: (value) =>
+                    value.trim() !== "" || "O título não pode ser vazio",
                 })}
-                errorMessage={errors.title?.message}
               />
             </div>
             <div>
               <Select
-                value={task?.time || ""}
-                onChange={(e) => {
-                  const selectedTime = e.target.value
-                  setTask((prevTask) => ({
-                    ...prevTask,
-                    time: selectedTime,
-                  }))
-                }}
-                {...register("time", {
-                  required: "O período é obrigatório",
-                })}
+                disabled={isPending}
                 errorMessage={errors.time?.message}
+                {...register("time", { required: "O período é obrigatório" })}
               />
             </div>
             <div>
               <Input
                 id="description"
                 label="Descrição"
-                defaultValue={task?.description}
+                disabled={isPending}
+                errorMessage={errors.description?.message}
                 {...register("description", {
                   required: "A descrição é obrigatória",
-                  validate: (value) => {
-                    if (value.trim() === "") {
-                      return "A descrição não pode ser vazia"
-                    }
-                    return true
-                  },
+                  validate: (value) =>
+                    value.trim() !== "" || "A descrição não pode ser vazia",
                 })}
-                errorMessage={errors.description?.message}
               />
             </div>
           </div>
-          {/* botão de salvar */}
           <div className="flex w-full justify-end gap-3">
             <Button
               size="large"
               color="primary"
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
             >
-              {isSubmitting ? "Salvando..." : "Salvar"}
+              {isUpdating && <LoadIcon className="animate-spin" />}
+              Salvar
             </Button>
           </div>
         </form>
