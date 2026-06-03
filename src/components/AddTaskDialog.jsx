@@ -1,40 +1,18 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import PropTypes from "prop-types"
 import React from "react"
 import { createPortal } from "react-dom"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { v4 } from "uuid"
 
 import { LoadIcon } from "../assets/icons"
+import { useAddTask } from "../hooks/use-add-task"
 import Button from "./Button"
 import Input from "./Input"
 import Select from "./Select"
 
 const AddTaskDialog = ({ isOpen, handleClose }) => {
-  const queryClient = useQueryClient()
-  const { mutate, isPending } = useMutation({
-    mutationKey: ["addTask"],
-    mutationFn: async (data) => {
-      const response = await fetch("http://localhost:3000/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: data.title.trim(),
-          time: data.time,
-          description: data.description.trim(),
-          status: "not_started",
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Falha ao adicionar tarefa")
-      }
-
-      return await response.json()
-    },
-  })
+  const { mutate: addTask, isPending } = useAddTask()
   const {
     register,
     formState: { errors, isSubmitting },
@@ -49,14 +27,17 @@ const AddTaskDialog = ({ isOpen, handleClose }) => {
   })
 
   const handleFormSubmit = async (data) => {
-    mutate(data, {
-      onSuccess: (newTask) => {
-        queryClient.setQueryData(["tasks"], (oldTasks) => [
-          ...(oldTasks ?? []),
-          newTask,
-        ])
-        toast.success("Tarefa adicionada com sucesso!")
+    const task = {
+      id: v4(),
+      title: data.title.trim(),
+      time: data.time,
+      description: data.description.trim(),
+      status: "not_started",
+    }
+    addTask(task, {
+      onSuccess: () => {
         handleClose()
+        toast.success("Tarefa adicionada com sucesso!")
         reset()
       },
       onError: () => {

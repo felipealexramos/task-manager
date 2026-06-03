@@ -1,25 +1,14 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import PropTypes from "prop-types"
 import React from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 
 import { CheckIcon, DetailsIcon, LoadIcon, TrashIcon } from "../assets/icons"
+import { useDeleteTask } from "../hooks/use-delete-task"
 import Button from "./Button"
 
 const TaskItem = ({ task, handleCheckBoxClick }) => {
-  const queryClient = useQueryClient()
-  const { mutate, isPending } = useMutation({
-    mutationKey: ["deleteTask", task.id],
-    mutationFn: async () => {
-      const response = await fetch(`http://localhost:3000/tasks/${task.id}`, {
-        method: "DELETE",
-      })
-      if (!response.ok) {
-        throw new Error("Falha ao remover tarefa")
-      }
-    },
-  })
+  const { mutate, isPending } = useDeleteTask(task.id)
   const getStatusClasses = () => {
     switch (task.status) {
       case "done":
@@ -33,12 +22,9 @@ const TaskItem = ({ task, handleCheckBoxClick }) => {
     }
   }
 
-  const handleDeleteClick = async (taskId) => {
-    mutate(taskId, {
+  const handleDeleteClick = () => {
+    mutate(undefined, {
       onSuccess: () => {
-        queryClient.setQueryData(["tasks"], (oldTasks) =>
-          (oldTasks ?? []).filter((task) => task.id !== taskId)
-        )
         toast.success("Tarefa removida com sucesso!")
       },
       onError: () => {

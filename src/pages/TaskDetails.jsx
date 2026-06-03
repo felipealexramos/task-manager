@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import React, { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate, useParams } from "react-router-dom"
@@ -14,71 +13,19 @@ import Button from "../components/Button"
 import Input from "../components/Input"
 import Select from "../components/Select"
 import SideBar from "../components/Sidebar"
+import { useDeleteTask } from "../hooks/use-delete-task"
+import { useGetTask } from "../hooks/use-get-task"
+import { useUpdateTask } from "../hooks/use-update-task"
 
 const TaskDetailsPage = () => {
   const { id: taskId } = useParams()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
-  const { data: task } = useQuery({
-    queryKey: ["task", taskId],
-    queryFn: async () => {
-      const response = await fetch(`http://localhost:3000/tasks/${taskId}`)
-      if (!response.ok) {
-        throw new Error("Tarefa não encontrada")
-      }
-      return response.json()
-    },
-  })
+  const { data: task } = useGetTask(taskId)
 
-  const { mutate: updateTask, isPending: isUpdating } = useMutation({
-    mutationFn: async (data) => {
-      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: data.title.trim(),
-          description: data.description.trim(),
-          time: data.time,
-        }),
-      })
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar tarefa")
-      }
-      return response.json()
-    },
-    onSuccess: (updatedTask) => {
-      queryClient.setQueryData(["task", taskId], updatedTask)
-      queryClient.setQueryData(["tasks"], (oldTasks) =>
-        oldTasks?.map((t) => (t.id === updatedTask.id ? updatedTask : t))
-      )
-      toast.success("Tarefa atualizada com sucesso!")
-    },
-    onError: () => {
-      toast.error("Erro ao atualizar tarefa. Tente novamente.")
-    },
-  })
+  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask(taskId)
 
-  const { mutate: deleteTask, isPending: isDeleting } = useMutation({
-    mutationFn: async () => {
-      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
-        method: "DELETE",
-      })
-      if (!response.ok) {
-        throw new Error("Falha ao deletar tarefa")
-      }
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(["tasks"], (oldTasks) =>
-        oldTasks?.filter((t) => t.id !== taskId)
-      )
-      toast.success("Tarefa deletada com sucesso!")
-      navigate("/")
-    },
-    onError: () => {
-      toast.error("Erro ao deletar tarefa. Tente novamente.")
-    },
-  })
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask(taskId)
 
   const {
     register,
@@ -100,7 +47,14 @@ const TaskDetailsPage = () => {
   }, [task, reset])
 
   const handleFormSubmit = (data) => {
-    updateTask(data)
+    updateTask(data, {
+      onSuccess: () => {
+        toast.success("Tarefa atualizada com sucesso!")
+      },
+      onError: () => {
+        toast.error("Erro ao atualizar tarefa. Tente novamente.")
+      },
+    })
   }
 
   const handleDeleteClick = () => {
@@ -108,7 +62,15 @@ const TaskDetailsPage = () => {
       "Tem certeza que deseja deletar essa tarefa?"
     )
     if (confirmDelete) {
-      deleteTask()
+      deleteTask(undefined, {
+        onSuccess: () => {
+          toast.success("Tarefa deletada com sucesso!")
+          navigate("/")
+        },
+        onError: () => {
+          toast.error("Erro ao deletar tarefa. Tente novamente.")
+        },
+      })
     }
   }
 
