@@ -1,7 +1,7 @@
-import { tv } from "tailwind-variants"
 import PropTypes from "prop-types"
+import { tv } from "tailwind-variants"
 
-const SideBarButton = ({ children, color }) => {
+const SideBarButton = ({ children, color, href }) => {
   const sidebar = tv({
     base: "flex items-center gap-2 rounded-lg px-6 py-3 text-brand-primary",
     variants: {
@@ -16,7 +16,7 @@ const SideBarButton = ({ children, color }) => {
   })
 
   return (
-    <a href="#" className={`${sidebar({ color })}`}>
+    <a href={href} className={`${sidebar({ color })}`}>
       {children}
     </a>
   )
@@ -25,6 +25,7 @@ const SideBarButton = ({ children, color }) => {
 SideBarButton.propTypes = {
   children: PropTypes.node.isRequired,
   color: PropTypes.oneOf(["selected", "unselected"]),
+  href: PropTypes.string.isRequired,
 }
 
 export default SideBarButton

@@ -35,6 +35,7 @@ export default [
         "warn",
         { allowConstantExport: true },
       ],
+      "react/react-in-jsx-scope": "off",
       semi: ["error", "never"],
       quotes: ["error", "double"],
       "prettier/prettier": ["error", { singleQuote: false }],
