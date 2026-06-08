@@ -20,6 +20,11 @@ export const useAddTask = () => {
         ...(oldTasks ?? []),
         createdTask,
       ])
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === "tasks" &&
+          typeof query.queryKey[1] === "object",
+      })
     },
   })
 }

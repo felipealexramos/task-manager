@@ -11,17 +11,13 @@ import Button from "./Button"
 const TaskItem = ({ task }) => {
   const { mutate, isPending } = useDeleteTask(task.id)
   const { mutate: updateTask } = useUpdateTask(task.id)
+
   const getStatusClasses = () => {
-    switch (task.status) {
-      case "done":
-        return "bg-brand-primary text-brand-primary"
-      case "in_progress":
-        return "bg-brand-process text-brand-process"
-      case "not_started":
-        return "bg-brand-dark-blue text-brand-dark-blue"
-      default:
-        return ""
-    }
+    return {
+      done: "bg-brand-primary text-brand-primary",
+      in_progress: "bg-brand-process text-brand-process",
+      not_started: "bg-brand-dark-blue bg-opacity-5 text-brand-dark-blue",
+    }[task.status]
   }
 
   const handleDeleteClick = () => {

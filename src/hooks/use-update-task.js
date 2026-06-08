@@ -23,6 +23,11 @@ export const useUpdateTask = (taskId) => {
         oldTasks?.map((t) => (t.id === updatedTask.id ? updatedTask : t))
       )
       queryClient.setQueryData(taskQueryKeys.getOneById(taskId), updatedTask)
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === "tasks" &&
+          typeof query.queryKey[1] === "object",
+      })
     },
   })
 }
