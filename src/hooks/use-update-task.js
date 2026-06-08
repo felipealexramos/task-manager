@@ -10,9 +10,9 @@ export const useUpdateTask = (taskId) => {
   return useMutation({
     mutationKey: taskMutationKeys.update(taskId),
     mutationFn: async (data) => {
-      const { data: updatedTask } = await api.put(`/tasks/${taskId}`, {
-        title: data?.title.trim(),
-        description: data?.description.trim(),
+      const { data: updatedTask } = await api.patch(`/tasks/${taskId}`, {
+        title: data?.title?.trim(),
+        description: data?.description?.trim(),
         time: data?.time,
         status: data?.status,
       })

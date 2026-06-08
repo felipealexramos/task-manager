@@ -5,6 +5,20 @@
       "title": "Teste",
       "time": "morning",
       "description": "Teste",
+      "status": "done"
+    },
+    {
+      "id": "a39cdb67-1079-4d3a-ae00-75e88e522106",
+      "title": "Tarefa atualizada",
+      "time": "afternoon",
+      "description": "Teste",
+      "status": "done"
+    },
+    {
+      "id": "d8f66eb6-d4bc-4a7d-a6cd-bed22fc5dad1",
+      "title": "Tarefa de noite",
+      "time": "night",
+      "description": "Noite",
       "status": "not_started"
     }
   ]

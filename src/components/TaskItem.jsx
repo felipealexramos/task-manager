@@ -5,10 +5,12 @@ import { toast } from "sonner"
 
 import { CheckIcon, DetailsIcon, LoadIcon, TrashIcon } from "../assets/icons"
 import { useDeleteTask } from "../hooks/use-delete-task"
+import { useUpdateTask } from "../hooks/use-update-task"
 import Button from "./Button"
 
-const TaskItem = ({ task, handleCheckBoxClick }) => {
+const TaskItem = ({ task }) => {
   const { mutate, isPending } = useDeleteTask(task.id)
+  const { mutate: updateTask } = useUpdateTask(task.id)
   const getStatusClasses = () => {
     switch (task.status) {
       case "done":
@@ -33,6 +35,32 @@ const TaskItem = ({ task, handleCheckBoxClick }) => {
     })
   }
 
+  const getNewStatus = () => {
+    if (task.status === "not_started") {
+      return "in_progress"
+    }
+    if (task.status === "in_progress") {
+      return "done"
+    }
+    return "not_started"
+  }
+
+  const handleCheckBoxClick = () => {
+    updateTask(
+      {
+        status: getNewStatus(),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Tarefa atualizada com sucesso!")
+        },
+        onError: () => {
+          toast.error("Erro ao atualizar tarefa. Tente novamente.")
+        },
+      }
+    )
+  }
+
   return (
     <div
       className={`flex items-center justify-between gap-2 rounded-lg bg-opacity-10 px-4 py-3 text-sm transition ${getStatusClasses()}`}
@@ -46,7 +74,7 @@ const TaskItem = ({ task, handleCheckBoxClick }) => {
             className="absolute h-7 w-7 cursor-pointer disabled:cursor-not-allowed"
             checked={task.status === "done"}
             disabled={isPending}
-            onChange={() => handleCheckBoxClick(task.id)}
+            onChange={handleCheckBoxClick}
           />
           {task.status === "done" && <CheckIcon />}
           {task.status === "in_progress" && (
@@ -60,7 +88,7 @@ const TaskItem = ({ task, handleCheckBoxClick }) => {
         <Button
           variant="ghost"
           onClick={() => {
-            handleDeleteClick(task.id)
+            handleDeleteClick()
           }}
           disabled={isPending}
         >

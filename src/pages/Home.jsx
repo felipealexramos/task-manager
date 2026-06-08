@@ -28,7 +28,7 @@ const HomePage = () => {
           <DashboardCard
             icon={<Tasks2Icon />}
             mainText={notStartedTasks?.toString()}
-            secondaryText="Tarefas para hoje"
+            secondaryText="Tarefas não iniciadas"
           />
           <DashboardCard
             icon={<TaskIcon />}
