@@ -50,6 +50,7 @@ const TaskDetailsPage = () => {
     updateTask(data, {
       onSuccess: () => {
         toast.success("Tarefa atualizada com sucesso!")
+        navigate("/tasks")
       },
       onError: () => {
         toast.error("Erro ao atualizar tarefa. Tente novamente.")
@@ -65,7 +66,7 @@ const TaskDetailsPage = () => {
       deleteTask(undefined, {
         onSuccess: () => {
           toast.success("Tarefa deletada com sucesso!")
-          navigate("/")
+          navigate("/tasks")
         },
         onError: () => {
           toast.error("Erro ao deletar tarefa. Tente novamente.")
