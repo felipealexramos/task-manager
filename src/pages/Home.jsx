@@ -29,7 +29,7 @@ const HomePage = () => {
           </div>
           <div className="space-y-4 rounded-[10px] bg-white p-6 shadow-md">
             <div>
-              <h3 className="text-xl font-semibold">Gráficos</h3>
+              <h3 className="text-xl font-semibold">Gráfico</h3>
               <span className="text-sm text-brand-text-gray">
                 Distribuição por status
               </span>
