@@ -13,7 +13,7 @@ const HomePage = () => {
     <div className="flex">
       <SideBar />
       <div className="w-full space-y-6 px-8 py-16">
-        <Header subtitle="Bem-vindo de volta, Felipe!" title="Suas Tarefas" />
+        <Header subtitle="Bem-vindo de volta!" title="Suas Tarefas" />
         <DashboardCards />
         <div className="grid grid-cols-[1.5fr_1fr] gap-9">
           <div className="space-y-6 rounded-[10px] bg-white p-6 shadow-md">

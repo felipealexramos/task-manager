@@ -23,7 +23,7 @@ const Tasks = () => {
   return (
     <div className="w-full space-y-6 px-8 py-16">
       <div className="rounded-xl bg-white p-6">
-        <Header subtitle="Bem-vindo de volta, Felipe!" title="Suas Tarefas" />
+        <Header subtitle="Bem-vindo de volta!" title="Suas Tarefas" />
         <div className="space-y-3">
           <TaskSeparator title="Manhã" icon={<SunIcon />} />
           {morningTasks?.length === 0 && (

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev` — start Vite dev server (frontend)
+- `npm run dev` — start Vite dev server (frontend, on `http://localhost:5173`)
 - `npx json-server db.json --port 3000` — start the mock REST API (required for the app to work; the frontend hits `http://localhost:3000/tasks`)
 - `npm run build` — production build via Vite
 - `npm run preview` — preview the production build
@@ -14,33 +14,69 @@ There is no test runner configured.
 
 ## Architecture
 
-Single-page React 19 app (JSX, no TypeScript) bootstrapped with Vite. UI is composed entirely of small functional components under [src/components/](src/components/) and styled with Tailwind CSS using a custom `brand.*` color palette defined in [tailwind.config.js](tailwind.config.js). The Poppins font is bundled in [src/assets/fonts/](src/assets/fonts/) and SVG icons are imported as React components via `vite-plugin-svgr` and re-exported from [src/assets/icons/index.js](src/assets/icons/index.js).
+Single-page React 19 app (JSX, no TypeScript) bootstrapped with Vite. Routing, server-state caching, and toasts are wired up in [src/main.jsx](src/main.jsx); UI is composed of small functional components under [src/components/](src/components/) and styled with Tailwind CSS using a custom `brand.*` color palette defined in [tailwind.config.js](tailwind.config.js). The Poppins font is bundled in [src/assets/fonts/](src/assets/fonts/) and SVG icons are imported as React components via `vite-plugin-svgr` and re-exported from [src/assets/icons/index.js](src/assets/icons/index.js).
+
+### Routing
+
+Routes are defined with `createBrowserRouter` in [src/main.jsx](src/main.jsx):
+
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/` | [pages/Home.jsx](src/pages/Home.jsx) | Dashboard: summary cards, task list, status pie chart |
+| `/tasks` | [pages/Tasks.jsx](src/pages/Tasks.jsx) | Tasks grouped by time of day |
+| `/task/:id` | [pages/TaskDetails.jsx](src/pages/TaskDetails.jsx) | Edit/delete a single task |
+| `*` | inline | 404 |
+
+> Note: [src/App.jsx](src/App.jsx) (Sidebar + Tasks) is **not** mounted by the router — `/tasks` renders `pages/Tasks.jsx`, which composes the same `Sidebar` + `Tasks` components directly. `App.jsx` is legacy/unused by the live routes.
 
 ### State and data flow
 
-There is no global store, router, or data-fetching library. State lives in [src/components/Tasks.jsx](src/components/Tasks.jsx), which is the page-level container:
+There is **no global store**. Server state is owned entirely by **TanStack Query (React Query)** — the query cache is the source of truth for task data. The `QueryClient` is provided in [src/main.jsx](src/main.jsx).
 
-- On mount, `Tasks` fetches `GET http://localhost:3000/tasks` (json-server backed by [db.json](db.json)) into `useState`.
-- Tasks are split client-side into `morning` / `afternoon` / `night` buckets by the `time` field and rendered into three `TaskSeparator` sections.
-- Status transitions cycle `not_started → in_progress → done → not_started` locally; toast feedback uses `sonner` (configured once in [src/App.jsx](src/App.jsx)).
-- Creation flows through [AddTaskDialog.jsx](src/components/AddTaskDialog.jsx), which `POST`s to json-server, then calls `onSubmitSuccess(createdTask)` so the parent appends to its `tasks` state.
-- Deletion is performed inside `TaskItem`, which then calls `onDeleteSuccess(taskId)` to remove the entry from parent state. The parent never refetches.
+All network access is encapsulated in custom hooks under [src/hooks/](src/hooks/), each wrapping `useQuery`/`useMutation`:
 
-Important: the network layer is inline `fetch` calls against the hardcoded `http://localhost:3000/tasks` base URL. There is no API client abstraction yet — if you add endpoints, follow the same pattern or extract a client.
+- **Queries:** `use-get-tasks` (all), `use-get-task` (one by id), `use-get-tasks-summary` (uses `useQueries` to count tasks per status via `?status=` filter)
+- **Mutations:** `use-add-task`, `use-update-task`, `use-delete-task`, `use-clear-tasks`
+
+The HTTP client is a single `axios` instance with the API `baseURL`, configured in [src/lib/axios.js](src/lib/axios.js). **Do not** use inline `fetch` or hardcode the base URL in components — go through a hook + `api` instance.
+
+### Cache update conventions (important)
+
+Mutations update the cache **optimistically without refetching the main list**:
+
+- `onSuccess` calls `queryClient.setQueryData(taskQueryKeys.getAll(), ...)` to add/replace/remove the task in the `["tasks"]` list.
+- It then calls `invalidateQueries` with a **predicate** that matches only the status-filtered summary queries (`query.queryKey[0] === "tasks" && typeof query.queryKey[1] === "object"`), so the dashboard counts/chart refresh while the main list is not refetched.
+
+When adding a new mutation, follow this same pattern (mutate cache directly + invalidate only summary queries).
+
+### Query/mutation keys
+
+Cache keys are centralized as factories — never inline key arrays in hooks:
+
+- [src/keys/queries.js](src/keys/queries.js): `taskQueryKeys.getAll()`, `getOneById(id)`, `getByStatus(status)`
+- [src/keys/mutations.js](src/keys/mutations.js): `taskMutationKeys.add()`, `update(id)`, `delete(id)`, `clearAll()`
+
+### Forms
+
+Forms use **react-hook-form** ([AddTaskDialog.jsx](src/components/AddTaskDialog.jsx), [pages/TaskDetails.jsx](src/pages/TaskDetails.jsx)) with `register` + `handleSubmit`, inline `validate` rules, and `errors.<field>?.message` surfaced through the shared `Input`/`Select` components' `errorMessage` prop. `TaskDetails` seeds the form from the fetched task via `reset(task)` in an effect.
 
 ### Task shape
 
-Each task in `db.json`:
+Each task in [db.json](db.json):
 
 ```
 { id: string, title: string, description: string, time: "morning"|"afternoon"|"night", status: "not_started"|"in_progress"|"done" }
 ```
 
-`AddTaskDialog` does not send an `id`; json-server generates it.
+`AddTaskDialog` generates the `id` client-side with `uuid` (`v4()`) before POSTing. Status cycles `not_started → in_progress → done → not_started`, driven by `use-update-task` from the checkbox in [TaskItem.jsx](src/components/TaskItem.jsx).
 
 ### Dialog rendering
 
-`AddTaskDialog` renders via `createPortal` to `document.body` and short-circuits to `null` when `isOpen` is false — keep this pattern when adding modals so backdrop blur and z-index stacking work.
+`AddTaskDialog` renders via `createPortal` to `document.body` and short-circuits to `null` when `isOpen` is false — keep this pattern when adding modals so backdrop blur and z-index stacking work. `ConfirmDialog` (used by [Header.jsx](src/components/Header.jsx) for "Limpar Tarefas") is the reusable confirmation modal.
+
+### Feedback
+
+Toasts use `sonner` — the `Toaster` is mounted once in [src/main.jsx](src/main.jsx); call `toast.success`/`toast.error` from mutation `onSuccess`/`onError` callbacks.
 
 ## Conventions enforced by tooling
 

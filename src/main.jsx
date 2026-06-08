@@ -2,13 +2,10 @@ import "./index.css"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import React from "react"
-import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import { Toaster } from "sonner"
 
-import App from "./App.jsx"
-import Home from "./pages/Home.jsx"
 import HomePage from "./pages/Home.jsx"
 import TaskDetailsPage from "./pages/TaskDetails.jsx"
 import TasksPage from "./pages/Tasks.jsx"
