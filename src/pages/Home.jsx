@@ -15,7 +15,7 @@ const HomePage = () => {
       <div className="w-full space-y-6 px-8 py-16">
         <Header subtitle="Bem-vindo de volta, Felipe!" title="Suas Tarefas" />
         <DashboardCards />
-        <div className="grid-cols-[1.5fr, 1fr] grid gap-9">
+        <div className="grid grid-cols-[1.5fr_1fr] gap-9">
           <div className="space-y-6 rounded-[10px] bg-white p-6 shadow-md">
             <h3 className="text-xl font-semibold">Tarefas</h3>
             <span className="text-sm text-brand-text-gray">

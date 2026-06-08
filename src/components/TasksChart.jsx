@@ -1,11 +1,10 @@
 import {
-  Bar,
-  BarChart,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts"
 
 import { useGetTasksSummary } from "../hooks/use-get-tasks-summary"
@@ -26,31 +25,28 @@ const TasksChart = () => {
   ]
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={data} barSize={40}>
-        <XAxis
-          dataKey="label"
-          tick={{ fontSize: 12, fill: "#9A9C9F" }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          allowDecimals={false}
-          tick={{ fontSize: 12, fill: "#9A9C9F" }}
-          axisLine={false}
-          tickLine={false}
-          width={24}
-        />
-        <Tooltip
-          cursor={{ fill: "#F8F8F8" }}
-          formatter={(value) => [value, "Tarefas"]}
-        />
-        <Bar dataKey="total" radius={[6, 6, 0, 0]}>
+    <ResponsiveContainer width="100%" height={240}>
+      <PieChart>
+        <Pie
+          data={data}
+          dataKey="total"
+          nameKey="label"
+          cx="50%"
+          cy="50%"
+          innerRadius={55}
+          outerRadius={85}
+          paddingAngle={2}
+        >
           {data.map((entry) => (
             <Cell key={entry.label} fill={STATUS_COLORS[entry.label]} />
           ))}
-        </Bar>
-      </BarChart>
+        </Pie>
+        <Tooltip formatter={(value) => [value, "Tarefas"]} />
+        <Legend
+          iconType="circle"
+          wrapperStyle={{ fontSize: 12, color: "#9A9C9F" }}
+        />
+      </PieChart>
     </ResponsiveContainer>
   )
 }
