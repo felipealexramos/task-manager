@@ -1,15 +1,32 @@
 import PropTypes from "prop-types"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import { AddIcon, TrashIcon } from "../assets/icons"
+import { useClearTasks } from "../hooks/use-clear-tasks"
 import AddTaskDialog from "./AddTaskDialog"
 import Button from "./Button"
+import ConfirmDialog from "./ConfirmDialog"
 
 function Header({ subtitle, title }) {
   const [addTaskDialogIsOpen, setAddTaskDialogIsOpen] = useState(false)
+  const [clearDialogIsOpen, setClearDialogIsOpen] = useState(false)
+  const { mutate: clearTasks, isPending } = useClearTasks()
 
   const handleDialogClose = async () => {
     setAddTaskDialogIsOpen(false)
+  }
+
+  const handleClearTasksConfirm = () => {
+    clearTasks(undefined, {
+      onSuccess: () => {
+        setClearDialogIsOpen(false)
+        toast.success("Tarefas removidas com sucesso!")
+      },
+      onError: () => {
+        toast.error("Erro ao remover tarefas. Tente novamente.")
+      },
+    })
   }
 
   return (
@@ -22,7 +39,11 @@ function Header({ subtitle, title }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button color="ghost">
+        <Button
+          color="ghost"
+          onClick={() => setClearDialogIsOpen(true)}
+          disabled={isPending}
+        >
           <TrashIcon />
           Limpar Tarefas
         </Button>
@@ -34,6 +55,16 @@ function Header({ subtitle, title }) {
         <AddTaskDialog
           isOpen={addTaskDialogIsOpen}
           handleClose={handleDialogClose}
+        />
+
+        <ConfirmDialog
+          isOpen={clearDialogIsOpen}
+          title="Limpar Tarefas"
+          description="Tem certeza que deseja excluir todas as tarefas? Esta ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          isLoading={isPending}
+          onConfirm={handleClearTasksConfirm}
+          onCancel={() => setClearDialogIsOpen(false)}
         />
       </div>
     </div>
