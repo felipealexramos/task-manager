@@ -12,10 +12,25 @@ export const useDeleteTask = (taskId) => {
       const { data: deletedTask } = await api.delete(`/tasks/${taskId}`)
       return deletedTask
     },
-    onSuccess: (deletedTask) => {
+    // UI otimista: remove da lista antes da API responder
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: taskQueryKeys.getAll() })
+
+      const previousTasks = queryClient.getQueryData(taskQueryKeys.getAll())
+
       queryClient.setQueryData(taskQueryKeys.getAll(), (oldTasks) =>
-        oldTasks?.filter((t) => t.id !== deletedTask.id)
+        oldTasks?.filter((t) => t.id !== taskId)
       )
+
+      return { previousTasks }
+    },
+    // Rollback se a remoção falhar
+    onError: (_err, _vars, context) => {
+      if (context?.previousTasks !== undefined) {
+        queryClient.setQueryData(taskQueryKeys.getAll(), context.previousTasks)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         predicate: (query) =>
           query.queryKey[0] === "tasks" &&

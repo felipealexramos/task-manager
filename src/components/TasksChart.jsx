@@ -8,6 +8,8 @@ import {
 } from "recharts"
 
 import { useGetTasksSummary } from "../hooks/use-get-tasks-summary"
+import QueryError from "./QueryError"
+import Skeleton from "./Skeleton"
 
 const STATUS_COLORS = {
   "Não iniciadas": "#FFAA04",
@@ -16,7 +18,27 @@ const STATUS_COLORS = {
 }
 
 const TasksChart = () => {
-  const { notStarted, inProgress, done } = useGetTasksSummary()
+  const { notStarted, inProgress, done, isLoading, isError, refetch } =
+    useGetTasksSummary()
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[240px] items-center justify-center">
+        <Skeleton className="h-40 w-40 rounded-full" />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-[240px] items-center justify-center">
+        <QueryError
+          message="Não foi possível carregar o gráfico."
+          onRetry={refetch}
+        />
+      </div>
+    )
+  }
 
   const data = [
     { label: "Não iniciadas", total: notStarted },

@@ -21,5 +21,7 @@ export const useGetTasksSummary = () => {
     inProgress: results[1].data?.length ?? 0,
     done: results[2].data?.length ?? 0,
     isLoading: results.some((r) => r.isLoading),
+    isError: results.some((r) => r.isError),
+    refetch: () => results.forEach((r) => r.refetch()),
   }
 }
