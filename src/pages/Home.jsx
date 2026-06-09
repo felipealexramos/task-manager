@@ -1,6 +1,8 @@
 import React from "react"
 
+import AddTaskButton from "../components/AddTaskButton"
 import DashboardCards from "../components/DashboardCards"
+import EmptyState from "../components/EmptyState"
 import Header from "../components/Header"
 import QueryError from "../components/QueryError"
 import SideBar from "../components/Sidebar"
@@ -35,9 +37,11 @@ const HomePage = () => {
                 />
               )}
               {!isLoading && !isError && tasks?.length === 0 && (
-                <p className="text-center text-sm text-brand-text-gray">
-                  Nenhuma tarefa criada ainda.
-                </p>
+                <EmptyState
+                  title="Você ainda não tem tarefas"
+                  description="Comece criando sua primeira tarefa para organizar o seu dia."
+                  action={<AddTaskButton label="Criar primeira tarefa" />}
+                />
               )}
               {!isLoading &&
                 !isError &&

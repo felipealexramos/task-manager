@@ -1,14 +1,7 @@
-import {
-  AddIcon,
-  CloudIcon,
-  LoadIcon,
-  MoonIcon,
-  SunIcon,
-  TrashIcon,
-} from "../assets/icons"
+import { CloudIcon, MoonIcon, SunIcon } from "../assets/icons"
 import { useGetTasks } from "../hooks/use-get-tasks"
-import AddTaskDialog from "./AddTaskDialog"
-import Button from "./Button"
+import AddTaskButton from "./AddTaskButton"
+import EmptyState from "./EmptyState"
 import Header from "./Header"
 import QueryError from "./QueryError"
 import Skeleton from "./Skeleton"
@@ -46,6 +39,12 @@ const Tasks = () => {
           <QueryError
             message="Não foi possível carregar as tarefas."
             onRetry={() => refetch()}
+          />
+        ) : !isLoading && tasks?.length === 0 ? (
+          <EmptyState
+            title="Nenhuma tarefa por aqui"
+            description="Crie sua primeira tarefa para começar a organizar a sua rotina."
+            action={<AddTaskButton label="Criar primeira tarefa" />}
           />
         ) : (
           <>

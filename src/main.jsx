@@ -16,7 +16,7 @@ const TaskDetailsPage = lazy(() => import("./pages/TaskDetails.jsx"))
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 min — dados mudam pouco; transição entre telas fica instantânea
+      staleTime: 1000 * 60,
       retry: 1,
       refetchOnWindowFocus: false,
     },

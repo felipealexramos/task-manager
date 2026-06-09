@@ -7,9 +7,16 @@ import { v4 } from "uuid"
 
 import { LoadIcon } from "../assets/icons"
 import { useAddTask } from "../hooks/use-add-task"
+import {
+  clearFormDraft,
+  getFormDraft,
+  useFormDraft,
+} from "../hooks/use-form-draft"
 import Button from "./Button"
 import Input from "./Input"
 import Select from "./Select"
+
+const DRAFT_KEY = "add-task-draft"
 
 const AddTaskDialog = ({ isOpen, handleClose }) => {
   const { mutate: addTask, isPending } = useAddTask()
@@ -18,13 +25,22 @@ const AddTaskDialog = ({ isOpen, handleClose }) => {
     formState: { errors, isSubmitting },
     handleSubmit,
     reset,
+    watch,
   } = useForm({
-    defaultValues: {
+    // Valida ao sair do campo (onBlur) e, após a 1ª tentativa, revalida
+    // dinamicamente (onChange) para o erro sumir assim que for corrigido.
+    mode: "onBlur",
+    reValidateMode: "onChange",
+    // Restaura um rascunho salvo, se houver (ex.: após reload acidental).
+    defaultValues: getFormDraft(DRAFT_KEY) ?? {
       title: "",
       time: "morning",
       description: "",
     },
   })
+
+  // Salva o rascunho continuamente enquanto o usuário digita
+  useFormDraft(DRAFT_KEY, watch)
 
   const handleFormSubmit = async (data) => {
     const task = {
@@ -38,7 +54,8 @@ const AddTaskDialog = ({ isOpen, handleClose }) => {
       onSuccess: () => {
         handleClose()
         toast.success("Tarefa adicionada com sucesso!")
-        reset()
+        clearFormDraft(DRAFT_KEY)
+        reset({ title: "", time: "morning", description: "" })
       },
       onError: () => {
         toast.error("Erro ao adicionar tarefa. Tente novamente.")

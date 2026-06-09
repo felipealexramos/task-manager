@@ -33,6 +33,9 @@ const TaskDetailsPage = () => {
     handleSubmit,
     reset,
   } = useForm({
+    // Valida ao sair do campo (onBlur) e revalida dinamicamente após o 1º envio.
+    mode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       title: "",
       time: "morning",

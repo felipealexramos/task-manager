@@ -2,20 +2,15 @@ import PropTypes from "prop-types"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { AddIcon, TrashIcon } from "../assets/icons"
+import { TrashIcon } from "../assets/icons"
 import { useClearTasks } from "../hooks/use-clear-tasks"
-import AddTaskDialog from "./AddTaskDialog"
+import AddTaskButton from "./AddTaskButton"
 import Button from "./Button"
 import ConfirmDialog from "./ConfirmDialog"
 
 function Header({ subtitle, title }) {
-  const [addTaskDialogIsOpen, setAddTaskDialogIsOpen] = useState(false)
   const [clearDialogIsOpen, setClearDialogIsOpen] = useState(false)
   const { mutate: clearTasks, isPending } = useClearTasks()
-
-  const handleDialogClose = async () => {
-    setAddTaskDialogIsOpen(false)
-  }
 
   const handleClearTasksConfirm = () => {
     clearTasks(undefined, {
@@ -47,15 +42,7 @@ function Header({ subtitle, title }) {
           <TrashIcon />
           Limpar Tarefas
         </Button>
-        <Button onClick={() => setAddTaskDialogIsOpen(true)}>
-          <AddIcon />
-          Nova Tarefa
-        </Button>
-
-        <AddTaskDialog
-          isOpen={addTaskDialogIsOpen}
-          handleClose={handleDialogClose}
-        />
+        <AddTaskButton />
 
         <ConfirmDialog
           isOpen={clearDialogIsOpen}

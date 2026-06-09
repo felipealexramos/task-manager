@@ -20,6 +20,16 @@ export default {
           danger: "#EF4444",
         },
       },
+      keyframes: {
+        "indeterminate-progress": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
+        },
+      },
+      animation: {
+        "indeterminate-progress":
+          "indeterminate-progress 1s ease-in-out infinite",
+      },
     },
   },
   plugins: [],
