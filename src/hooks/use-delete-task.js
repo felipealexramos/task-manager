@@ -30,12 +30,5 @@ export const useDeleteTask = (taskId) => {
         queryClient.setQueryData(taskQueryKeys.getAll(), context.previousTasks)
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          query.queryKey[0] === "tasks" &&
-          typeof query.queryKey[1] === "object",
-      })
-    },
   })
 }

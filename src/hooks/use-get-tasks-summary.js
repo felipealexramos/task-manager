@@ -1,27 +1,21 @@
-import { useQueries } from "@tanstack/react-query"
+import { useGetTasks } from "./use-get-tasks"
 
-import { taskQueryKeys } from "../keys/queries"
-import { api } from "../lib/axios"
-
-const STATUSES = ["not_started", "in_progress", "done"]
+const INITIAL_COUNTS = { not_started: 0, in_progress: 0, done: 0 }
 
 export const useGetTasksSummary = () => {
-  const results = useQueries({
-    queries: STATUSES.map((status) => ({
-      queryKey: taskQueryKeys.getByStatus(status),
-      queryFn: async () => {
-        const { data } = await api.get("/tasks", { params: { status } })
-        return data
-      },
-    })),
-  })
+  const { data: tasks, isLoading, isError, refetch } = useGetTasks()
+
+  const counts = (tasks ?? []).reduce(
+    (acc, task) => ({ ...acc, [task.status]: acc[task.status] + 1 }),
+    INITIAL_COUNTS
+  )
 
   return {
-    notStarted: results[0].data?.length ?? 0,
-    inProgress: results[1].data?.length ?? 0,
-    done: results[2].data?.length ?? 0,
-    isLoading: results.some((r) => r.isLoading),
-    isError: results.some((r) => r.isError),
-    refetch: () => results.forEach((r) => r.refetch()),
+    notStarted: counts.not_started,
+    inProgress: counts.in_progress,
+    done: counts.done,
+    isLoading,
+    isError,
+    refetch,
   }
 }

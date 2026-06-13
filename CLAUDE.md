@@ -35,25 +35,27 @@ There is **no global store**. Server state is owned entirely by **TanStack Query
 
 All network access is encapsulated in custom hooks under [src/hooks/](src/hooks/), each wrapping `useQuery`/`useMutation`:
 
-- **Queries:** `use-get-tasks` (all), `use-get-task` (one by id), `use-get-tasks-summary` (uses `useQueries` to count tasks per status via `?status=` filter)
+- **Queries:** `use-get-tasks` (all), `use-get-task` (one by id), `use-get-tasks-summary` (derives per-status counts client-side from the `use-get-tasks` list — no extra requests, so counts and list always agree)
 - **Mutations:** `use-add-task`, `use-update-task`, `use-delete-task`, `use-clear-tasks`
 
 The HTTP client is a single `axios` instance with the API `baseURL`, configured in [src/lib/axios.js](src/lib/axios.js). **Do not** use inline `fetch` or hardcode the base URL in components — go through a hook + `api` instance.
 
 ### Cache update conventions (important)
 
-Mutations update the cache **optimistically without refetching the main list**:
+The `["tasks"]` list is the **single source of truth** — dashboard counts and the status chart are derived from it client-side (see `use-get-tasks-summary`), not from separate filtered queries. This guarantees the list and the counts can never disagree.
 
-- `onSuccess` calls `queryClient.setQueryData(taskQueryKeys.getAll(), ...)` to add/replace/remove the task in the `["tasks"]` list.
-- It then calls `invalidateQueries` with a **predicate** that matches only the status-filtered summary queries (`query.queryKey[0] === "tasks" && typeof query.queryKey[1] === "object"`), so the dashboard counts/chart refresh while the main list is not refetched.
+Mutations update that one cache **optimistically without refetching**:
 
-When adding a new mutation, follow this same pattern (mutate cache directly + invalidate only summary queries).
+- `onMutate`/`onSuccess` call `queryClient.setQueryData(taskQueryKeys.getAll(), ...)` to add/replace/remove the task in the `["tasks"]` list (and `getOneById` for the single-task cache).
+- `onError` rolls back from the snapshot captured in `onMutate`.
+
+When adding a new mutation, follow this same pattern (mutate the `["tasks"]` cache directly). Do **not** reintroduce per-status server queries for counts — derive them from the list instead.
 
 ### Query/mutation keys
 
 Cache keys are centralized as factories — never inline key arrays in hooks:
 
-- [src/keys/queries.js](src/keys/queries.js): `taskQueryKeys.getAll()`, `getOneById(id)`, `getByStatus(status)`
+- [src/keys/queries.js](src/keys/queries.js): `taskQueryKeys.getAll()`, `getOneById(id)`
 - [src/keys/mutations.js](src/keys/mutations.js): `taskMutationKeys.add()`, `update(id)`, `delete(id)`, `clearAll()`
 
 ### Forms
